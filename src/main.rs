@@ -12,7 +12,7 @@ use tcp::ThreadPool;
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:8080").expect("Failed to bind to port 8080");
     // Open the JPEG image
-    let img = image::open(filename).unwrap();
+    let img = image::open("webpages/images/pic.jpg").unwrap();
 
     // Convert the JPEG image to WebP with lossless compression
     let mut buf: Vec<u8> = Vec::new();
@@ -24,6 +24,7 @@ fn main() {
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
+        let buf = buf.clone();
 
         pool.execute(|| {
             handle_connection(stream, buf);
