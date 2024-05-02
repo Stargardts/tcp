@@ -1,5 +1,3 @@
-use image::ImageFormat;
-use std::io::Cursor;
 use std::{
     fs,
     io::{prelude::*, BufReader},
@@ -11,29 +9,19 @@ use tcp::ThreadPool;
 
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:8080").expect("Failed to bind to port 8080");
-    // Open the JPEG image
-    let img = image::open("webpages/images/pic.jpg").unwrap();
-
-    // Convert the JPEG image to WebP with lossless compression
-    let mut buf: Vec<u8> = Vec::new();
-    let mut cursor = Cursor::new(&mut buf);
-    img.write_to(&mut cursor, ImageFormat::WebP)
-        .expect("Error converting to WebP");
-
     let pool = ThreadPool::new(4);
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        let buf = buf.clone();
 
         pool.execute(|| {
-            handle_connection(stream, buf);
+            handle_connection(stream);
         });
     }
     println!("Shutting down.");
 }
 
-fn handle_connection(mut stream: TcpStream, image: Vec<u8>) {
+fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
     let request_line = buf_reader.lines().next().unwrap().unwrap();
 
@@ -52,16 +40,28 @@ fn handle_connection(mut stream: TcpStream, image: Vec<u8>) {
     };
 
     if filename.ends_with(".jpg") {
+        let file = fs::File::open(filename).unwrap();
         let mime_type = "image/webp".to_string();
+        let metadata = file.metadata().unwrap();
         let response = format!(
             "{}\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n",
             status_line,
             mime_type,
-            image.len()
+            metadata.len()
         );
 
         stream.write_all(response.as_bytes()).unwrap();
-        stream.write_all(&image).unwrap();
+
+        let mut buf_reader = BufReader::new(file);
+        let mut buffer = [0; 1024];
+        loop {
+            let bytes_read = buf_reader.read(&mut buffer).unwrap();
+            if bytes_read == 0 {
+                break;
+            }
+            stream.write_all(&buffer[..bytes_read]).unwrap();
+        }
+
         stream.flush().unwrap();
     } else {
         let contents = fs::read_to_string(filename).unwrap();
