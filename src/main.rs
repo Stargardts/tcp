@@ -49,6 +49,6 @@ fn handle_connection(mut stream: TcpStream) {
         stream_text(&mut stream, status_line, filename, mime_type);
     }
     else if mime_type.starts_with("image/") {
-        stream_image(&mut stream, status_line, filename, mime_type);
+        stream_image(&mut stream, status_line, filename, mime_type).unwrap();
     }
 }

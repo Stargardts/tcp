@@ -767,6 +767,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "sendfile"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d64d429eab67399587c3737a2da1fb9e635b85d355b495c3ddb757f1f4ee84c3"
+dependencies = [
+ "libc",
+ "log",
+]
+
+[[package]]
 name = "serde"
 version = "1.0.198"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -861,6 +871,7 @@ version = "0.1.0"
 dependencies = [
  "image",
  "mime_guess",
+ "sendfile",
  "webp",
 ]
 

@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 image = "0.25.1"
 mime_guess = "2.0"
+sendfile = "0.3.0"
 webp = "0.3"

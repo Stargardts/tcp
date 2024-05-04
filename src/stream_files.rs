@@ -1,7 +1,7 @@
 // Purpose: Functions for streaming files to a client
 use std::{
     fs,
-    io::prelude::*,
+    io::{self, Read, Write},
     net::TcpStream,
 };
 
@@ -19,24 +19,21 @@ pub fn stream_text(stream: &mut TcpStream, status_line: &str, filename: &str, mi
     stream.flush().unwrap();
 }
 
-pub fn stream_image (stream: &mut TcpStream, status_line: &str, filename: &str, mime_type: String) {
-    let contents = fs::read(filename).unwrap();
+pub fn stream_image(stream: &mut TcpStream, status_line: &str, filename: &str, mime_type: String) -> io::Result<()> {
+    let metadata = fs::metadata(filename)?;
     let response = format!(
         "{}\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n",
         status_line,
         mime_type,
-        contents.len()
+        metadata.len()
     );
     println!("Response: {}", response);
-    stream.write(response.as_bytes()).unwrap();
-    let mut buf = vec![0; 1024];
-    let mut file = fs::File::open(filename).unwrap();
-    loop {
-        let n = file.read(&mut buf).unwrap();
-        if n == 0 {
-            break;
-        }
-        stream.write(&buf[..n]).unwrap();
-    }
-    stream.flush().unwrap();
+    stream.write_all(response.as_bytes())?;
+    
+    let mut file = fs::File::open(filename)?;
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer)?;
+    stream.write(&buffer)?;
+    stream.flush()?;
+    Ok(())
 }
