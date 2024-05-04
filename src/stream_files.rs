@@ -8,14 +8,14 @@ use std::{
 pub fn stream_text(stream: &mut TcpStream, status_line: &str, filename: &str, mime_type: String) {
     let contents = fs::read_to_string(filename).unwrap();
     let response = format!(
-        "{}\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n{}",
+        "{}\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n",
         status_line,
         mime_type,
         contents.len(),
-        contents
     );
     println!("Response: {}", response);
     stream.write(response.as_bytes()).unwrap();
+    stream.write(contents.as_bytes()).unwrap();
     stream.flush().unwrap();
 }
 
